@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="AiEarn Regression Suite" configfailurepolicy="continue" verbose="1" parallel="classes" thread-count="5">
+    <parameter name="browser" value="hchrome" />
+    <parameter name="env" value="aiearn" />
+    <test name="AiEarn Script 1">
+        <classes>
+            <class name="GetAiEarnPowerScript"></class>
+        </classes>
+    </test>
+</suite>
