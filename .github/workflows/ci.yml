@@ -2,7 +2,7 @@ name: Java CI with Maven
 
 on:
   schedule:
-    - cron: "0 */4 * * *"   # run after every 4h
+    - cron: "0 3,7,11,15,19,23 * * * "   # run after every 4h
   workflow_dispatch:
 
 jobs:
