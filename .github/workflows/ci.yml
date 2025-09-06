@@ -1,0 +1,36 @@
+name: Java CI with Maven
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"   # run after every 4h
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Build and run tests
+        run: mvn clean test -Dsurefire.suiteXmlFiles=aiearn.xml
+
+      - name: Send Telegram notification
+        if: always() # gửi dù pass hay fail
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            STATUS="✅ Tests PASSED"
+          else
+            STATUS="❌ Tests FAILED"
+          fi
+
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+            -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+            -d text="CI/CD Run: $STATUS on repo $GITHUB_REPOSITORY"
