@@ -1,36 +1,55 @@
-name: Java CI with Maven
+name: Selenium CI
 
 on:
   schedule:
-    - cron: "0 3,7,11,15,19,23 * * * "   # run after every 4h
-  workflow_dispatch:
+    - cron: "5 3,7,11,15,19,23 * * *"   
+  workflow_dispatch:                     
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 11
 
-      - name: Build and run tests
-        run: mvn clean test -Dsurefire.suiteXmlFiles=aiearn.xml
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Install ChromeDriver
+        run: |
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
+          wget https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          chromedriver --version
+
+      - name: Run Maven tests
+        run: mvn -B clean test -Dsurefire.suiteXmlFiles=aiearn.xml
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
 
       - name: Send Telegram notification
-        if: always() # gửi dù pass hay fail
+        if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
-            STATUS="✅ Tests PASSED"
+            STATUS="✅ Test PASSED"
           else
-            STATUS="❌ Tests FAILED"
+            STATUS="❌ Test FAILED"
           fi
-
           curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
             -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-            -d text="CI/CD Run: $STATUS on repo $GITHUB_REPOSITORY"
+            -d text="🔔 Selenium CI run completed.\nRepo: $GITHUB_REPOSITORY\nBranch: $GITHUB_REF_NAME\nStatus: $STATUS\nRun: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
