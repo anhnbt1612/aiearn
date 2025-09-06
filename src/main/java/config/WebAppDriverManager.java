@@ -48,7 +48,14 @@ public class WebAppDriverManager {
     public static void initializeDriver() {
         if (driver.get() == null) {
             WebDriverManager.chromedriver().setup(); // Auto-download ChromeDriver
-            WebDriver newDriver = new ChromeDriver();
+
+            ChromeOptions options = new ChromeOptions();
+            options.addArguments("--headless=new");          
+            options.addArguments("--no-sandbox");            
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--remote-allow-origins=*");
+
+            WebDriver newDriver = new ChromeDriver(options);
             driver.set(newDriver);
         }
     }
